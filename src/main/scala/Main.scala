@@ -20,7 +20,7 @@ object Main extends App {
   println("fibonacci via dyna")
   println(Recursive.fib2(20))
   println("dodosuko problem")
-  Recursive.dodosukoAnamorphism(Recursive.ds() -> Nil)
+  Recursive.dodosukoAnamorphism(Recursive.ds() -> 0)
   Recursive.injectLove()
 }
 
@@ -60,14 +60,12 @@ object Recursive {
 
   val fib2 = scheme.zoo.dyna(fibCVA, natCoalgebra)
 
-  val (d, s) = ("ドド", "スコ")
-
-  val ds = () => scala.util.Random.shuffle(Seq(d, s)).head
-  val dodosukoCoalgebra = Coalgebra[ListF[String, *], (String, List[String])] {
-    case (word, st)
-        if st.take(12).reverse == List(d, s, s, s, d, s, s, s, d, s, s, s) =>
-      NilF
-    case (word, st) => print(word); ConsF(word, (ds(), word :: st.take(12)))
+  val ds = () => scala.util.Random.nextInt(2).toShort
+  val dsa = "スコ" :: "ドド" :: Nil
+  val dodosukoCoalgebra = Coalgebra[ListF[Short, *], (Short, Short)] {
+    case (_, st) if st == 2184 => NilF
+    case (word, st) =>
+      print(dsa(word)); ConsF(word, (ds(), ((st << 1) | word) & 4095 toShort))
   }
   val dodosukoAnamorphism = scheme.ana(dodosukoCoalgebra)
   def injectLove() = println("ラブ注入♡")

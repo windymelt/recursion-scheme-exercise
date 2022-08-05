@@ -19,16 +19,17 @@ import scala.util.Random
 val d = "ドド"
 val s = "スコ"
 
-val ds: () => String = () => Random.shuffle(Seq(d, s)).head
+val ds = () => Random.nextInt(2)
+val dsa = "スコ" :: "ドド" :: Nil
 
 // test: スコが出たら停止するana
-val sukoCoalgebra = Coalgebra[ListF[String, *], String] {
-  case "スコ" => NilF
-  case "ドド" => ConsF("ドド", ds())
-}
-val sukoAna = scheme.ana(sukoCoalgebra)
+// val sukoCoalgebra = Coalgebra[ListF[String, *], String] {
+//   case "スコ" => NilF
+//   case "ドド" => ConsF("ドド", ds())
+// }
+// val sukoAna = scheme.ana(sukoCoalgebra)
 
-sukoAna("ドド")
+// sukoAna("ドド")
 
 // apoの練習
 // 型パラメータRは再帰しないので、直接List[Int]を与える
@@ -98,14 +99,13 @@ val ddskRATest =
   }
 val ddskParaTest = scheme.cata(ddskRATest)
 
-val dodosukoCoalgebra = Coalgebra[ListF[String, *], (String, List[String])] {
-  case (word, st)
-      if st.take(12).reverse == List(d, s, s, s, d, s, s, s, d, s, s, s) =>
-    NilF
-  case (word, st) => print(word); ConsF(word, (ds(), word :: st.take(12)))
+val dodosukoCoalgebra = Coalgebra[ListF[Int, *], (Int, Int)] {
+  case (_, st) if st == 2184 => NilF
+  case (word, st) =>
+    print(dsa(word)); ConsF(word, (ds(), ((st << 1) | word) & 4095))
 }
 val dodosukoAnamorphism = scheme.ana(dodosukoCoalgebra)
 def injectLove() = println("ラブ注入♡")
 
-dodosukoAnamorphism(ds() -> Nil)
+dodosukoAnamorphism(ds() -> 0)
 injectLove()
