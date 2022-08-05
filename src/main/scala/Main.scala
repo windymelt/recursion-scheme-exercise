@@ -60,12 +60,12 @@ object Recursive {
 
   val fib2 = scheme.zoo.dyna(fibCVA, natCoalgebra)
 
-  val ds = () => scala.util.Random.nextInt(2).toShort
+  val ds = () => scala.util.Random.nextInt(2)
   val dsa = "スコ" :: "ドド" :: Nil
-  val dodosukoCoalgebra = Coalgebra[ListF[Short, *], (Short, Short)] {
+  val dodosukoCoalgebra = Coalgebra[ListF[Int, *], (Int, Int)] {
     case (_, st) if st == 2184 => NilF
     case (word, st) =>
-      print(dsa(word)); ConsF(word, (ds(), ((st << 1) | word) & 4095 toShort))
+      print(dsa(word)); ConsF(word, (ds(), ((st << 1) | word) & 4095))
   }
   val dodosukoAnamorphism = scheme.ana(dodosukoCoalgebra)
   def injectLove() = println("ラブ注入♡")
