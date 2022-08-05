@@ -100,7 +100,7 @@ val ddskRATest =
 val ddskParaTest = scheme.cata(ddskRATest)
 
 val dodosukoCoalgebra = Coalgebra[ListF[Int, *], (Int, Int)] {
-  case (_, st) if st == 2184 => NilF
+  case (_, 2184) => NilF
   case (word, st) =>
     print(dsa(word)); ConsF(word, (ds(), ((st << 1) | word) & 4095))
 }
