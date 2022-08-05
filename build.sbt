@@ -16,3 +16,5 @@ lazy val root = project
       "org.scalameta" %% "munit" % "0.7.29" % Test
     )
   )
+
+javaOptions := Seq("-Xss256m")

@@ -3,54 +3,109 @@
 // 【問題】配列{"ドド","スコ"}からランダムに要素を標準出力し続け、
 // 『その並びが「ドドスコスコスコ」を3回繰り返したもの』に一致したときに
 // 「ラブ注入♡」と標準出力して終了するプログラムを作成せよ(配点:5点)
+import higherkindness.droste.data.Nu
+import higherkindness.droste.data.Nu.Default
+import scala.collection.immutable
+import higherkindness.droste.data.Attr
 
 // ドド、またはスコのいずれかを出力する無限リストを考える。
 // これはanaで作成できる:
 import higherkindness.droste._
+import higherkindness.droste.data.:<
 import higherkindness.droste.data.list._
 
 import scala.util.Random
 
-val dd = "ドド"
-val sk = "スコ"
+val d = "ドド"
+val s = "スコ"
 
-val dodoOrSuko: () => String = () =>
-  Random.nextBoolean() match {
-    case true  => dd
-    case false => sk
-  }
+val ds: () => String = () => Random.shuffle(Seq(d, s)).head
 
-val example = dodoOrSuko()
+// test: スコが出たら停止するana
+val sukoCoalgebra = Coalgebra[ListF[String, *], String] {
+  case "スコ" => NilF
+  case "ドド" => ConsF("ドド", ds())
+}
+val sukoAna = scheme.ana(sukoCoalgebra)
 
-// Rangeを作る
-val lif = ListF.fromScalaList(List(1, 2, 3, 4, 5))
-val sumAlg = Algebra[ListF[Int, _], Int] {
-  case ConsF(h, t) => h + t
-  case NilF        => 0
+sukoAna("ドド")
+
+// apoの練習
+// 型パラメータRは再帰しないので、直接List[Int]を与える
+val rco = RCoalgebra[List[Int], ListF[Int, *], Int] {
+  case n if n > 10 => NilF
+  case n if n < 0  => ConsF(0, Left(Nil))
+  case n           => ConsF(n, Right(n + 1))
+
+}
+val rcoApo = scheme.zoo.apo(rco)
+
+rcoApo(0)
+rcoApo(100)
+rcoApo(-10)
+
+// paraの練習
+// paraは今まで見てきたサブツリーを得られる
+val ral = RAlgebra[List[Int], ListF[Int, *], List[List[Int]]] {
+  case ConsF(head, (orig, tail)) => head +: orig :: tail
+  case NilF                      => List(Nil)
+}
+val tails = scheme.zoo.para(ral)
+tails(List(1, 2, 3, 4))
+
+// histoの練習
+// course-of-value algebra, abbreviated to a CV-algebra
+// https://blog.sumtypeofway.com/posts/recursion-schemes-part-4.html
+val cusumCVA = CVAlgebra[ListF[Int, *], Int] {
+  case ConsF(head, tail :< attr) => head + tail
+  case NilF                      => 0
 }
 
-val sumA = scheme.cata(sum)
-scheme.cata[ListF[Int, _], Int, Int](sum)
-// def sumA: Algebra[ListF[Int], Int] = Algebra {
-//   case Some(n) => n + 1
-//   case None    => 0
-// }
-// val sum = scheme.cata(sumA)
+val cusum = scheme.zoo.histo(cusumCVA)
+cusum(List(1, 2, 3, 4, 5))
 
-// 指定された個数出力できるようにする。
-// 残り個数と出力する文字列は違う型なのでanaをそのまま使うことはできない
+val natCoalgebra: Coalgebra[Option, BigDecimal] =
+  Coalgebra(n => if (n > 0) Some(n - 1) else None)
+val natNat = scheme.ana(natCoalgebra)
+natNat(3)
 
-val ddskCoalgebra = Coalgebra[List, (Int, String)](state =>
-  state match {
-    case (0, _)    => Nil
-    case (n, rest) => (n, rest) :: List((n - 1, dodoOrSuko()))
+val fibCVA = CVAlgebra[Option, BigDecimal] {
+  case None                    => 0
+  case Some(_ :< None)         => 1
+  case Some(x :< Some(y :< _)) => x + y
+}
+
+val fib = scheme.zoo.histo(fibCVA)
+fib(natNat(10))
+
+// 素朴なhyloじゃなくてhistoなどのバリエーションによるhyloをやりたいときはghyloをつかうっぽい
+// gなんとかシリーズは合成可能なgenericなバージョン
+// genericなバージョンを使う場合は、それぞれにどのschemeを使うかをgather/scatterで指定するっぽい
+val fib2 =
+  scheme.ghylo(fibCVA.gather(Gather.histo), natCoalgebra.scatter(Scatter.ana))
+fib2(10)
+
+// 実はhisto;anaはdynaなのでこう書ける
+val fib3 = scheme.zoo.dyna(fibCVA, natCoalgebra)
+fib3(10)
+
+val dodoStream =
+  data.stream.Stream.fromIterator(LazyList.iterate(ds())(_ => ds()).iterator)
+val ddskRATest =
+  Algebra[ListF[String, *], data.stream.Stream[String]] {
+    case NilF              => data.stream.Stream.empty
+    case ConsF(head, tail) => data.stream.Stream.cons(tail)(head)
   }
-)
+val ddskParaTest = scheme.cata(ddskRATest)
 
-//val ddskCoalgebra = Coalgebra[Option, String](_ => Some(dodoOrSuko()))
+val dodosukoCoalgebra = Coalgebra[ListF[String, *], (String, List[String])] {
+  case (word, st)
+      if st.take(12).reverse == List(d, s, s, s, d, s, s, s, d, s, s, s) =>
+    NilF
+  case (word, st) => print(word); ConsF(word, (ds(), word :: st.take(12)))
+}
+val dodosukoAnamorphism = scheme.ana(dodosukoCoalgebra)
+def injectLove() = println("ラブ注入♡")
 
-val infiniteDdSk = scheme.ana(ddskCoalgebra)
-// 停止しない
-//infiniteDdSk((10, ""))
-
-// 過去の出力をもとに
+dodosukoAnamorphism(ds() -> Nil)
+injectLove()
