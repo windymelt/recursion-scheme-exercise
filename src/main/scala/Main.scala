@@ -64,7 +64,7 @@ object Recursive {
   val dss = "スコ" :: "ドド" :: Nil
   val dodosukoCoalgebra = Coalgebra[ListF[Int, *], (Int, Int)] {
     case (_, 2184) => NilF
-    case (b, st)   => print(dss(b)); ConsF(b, (ds(), ((st << 1) | b) & 4095))
+    case (b, st)   => print(dss(b)); ConsF(b, (ds(), st << 1 & 4095 | b))
   }
   val dodosukoAnamorphism = scheme.ana(dodosukoCoalgebra)
   def injectLove() = println("ラブ注入♡")
