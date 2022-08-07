@@ -3,10 +3,12 @@ import higherkindness.droste.CVAlgebra
 import higherkindness.droste.Coalgebra
 import higherkindness.droste.RAlgebra
 import higherkindness.droste.data.:<
+import higherkindness.droste.data.Attr
 import higherkindness.droste.data.list.ConsF
 import higherkindness.droste.data.list.ListF
 import higherkindness.droste.data.list.NilF
 import higherkindness.droste.scheme
+import higherkindness.droste.prelude
 
 object Main extends App {
   println("factorial")
@@ -19,9 +21,11 @@ object Main extends App {
   println(Recursive.fib(Recursive.natnat(20)))
   println("fibonacci via dyna")
   println(Recursive.fib2(20))
-  println("dodosuko problem")
-  Recursive.dodosukoAnamorphism(Recursive.ds() -> 0)
-  Recursive.injectLove()
+  // println("dodosuko problem")
+  // Recursive.dodosukoAnamorphism(Recursive.ds() -> 0)
+  // Recursive.injectLove()
+  println("imos1")
+  println(Recursive.cusum12(Recursive.l.reverse))
 }
 
 object Recursive {
@@ -68,4 +72,14 @@ object Recursive {
   }
   val dodosukoAnamorphism = scheme.ana(dodosukoCoalgebra)
   def injectLove() = println("ラブ注入♡")
+
+// できた。
+val l = List(1, 0, 0, 1, 0, -1, 0, -1, 0)
+
+val cusum1A = Algebra[ListF[Int, *], List[Int]] {
+  case NilF => println("base case: Nil");Nil
+  case ConsF(h, Nil) => println(s"boobie case: head is $h");h :: Nil
+  case ConsF(h, t :: ts) => println(s"case: head is $h and prev.value is $t and posttail is $ts");h + t :: t :: ts
+}
+val cusum12 = scheme.cata(cusum1A)
 }
